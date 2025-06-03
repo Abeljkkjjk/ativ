@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Clone</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navbar / Menu / Pesquisa -->
+    <header id="header"></header>
+
+    <!-- Carrossel -->
+    <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators" id="carousel-indicators">
+            <!-- Indicadores serão gerados dinamicamente -->
+        </div>
+        <div class="carousel-inner" id="carousel-inner">
+            <!-- Itens do carrossel serão gerados dinamicamente -->
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Próximo</span>
+        </button>
+    </div>
+
+    <!-- Barra de Pesquisa -->
+    <div class="container mt-4">
+        <form id="search-form" class="mb-4">
+            <div class="input-group">
+                <input type="text" id="search-input" class="form-control bg-dark text-light" 
+                       placeholder="Pesquisar filmes e séries...">
+                <button class="btn btn-danger" type="submit" title="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+        <div id="search-results" class="mt-4">
+            <!-- Resultados da pesquisa serão exibidos aqui -->
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="container mt-5">
+        <!-- Navegação por Tabs -->
+        <ul class="nav nav-tabs" id="contentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="movies-tab" data-bs-toggle="tab" 
+                        data-bs-target="#movies" type="button" role="tab">
+                    <i class="fas fa-film"></i> Filmes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="series-tab" data-bs-toggle="tab" 
+                        data-bs-target="#series" type="button" role="tab">
+                    <i class="fas fa-tv"></i> Séries
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="mylist-tab" data-bs-toggle="tab" 
+                        data-bs-target="#mylist" type="button" role="tab">
+                    <i class="fas fa-list"></i> Minha Lista
+                </button>
+            </li>
+        </ul>
+
+        <!-- Conteúdo das Tabs -->
+        <div class="tab-content mt-4" id="contentTabsContent">
+            <!-- Tab de Filmes -->
+            <div class="tab-pane fade show active" id="movies" role="tabpanel">
+                <h2 class="text-center text-light mb-4">Filmes Populares</h2>
+                <div id="movies-container" class="row">
+                    <!-- Os cards de filmes serão carregados aqui -->
+                </div>
+            </div>
+
+            <!-- Tab de Séries -->
+            <div class="tab-pane fade" id="series" role="tabpanel">
+                <h2 class="text-center text-light mb-4">Séries Populares</h2>
+                <div id="series-container" class="row">
+                    <!-- Os cards de séries serão carregados aqui -->
+                </div>
+            </div>
+
+            <!-- Tab de Minha Lista -->
+            <div class="tab-pane fade" id="mylist" role="tabpanel">
+                <h2 class="text-center text-light mb-4">Minha Lista</h2>
+                <div id="mylist-container" class="row">
+                    <!-- Os itens da lista serão carregados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="footer"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+
+    <!-- Scripts Principais -->
+    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/header.js"></script>
+    <script type="module" src="js/footer.js"></script>
+    <script type="module" src="js/carousel.js"></script>
+    <script type="module" src="js/modal.js"></script>
+    <script type="module" src="js/search.js"></script>
+    <script type="module" src="js/userList.js"></script>
+
+    <!-- Verificação de carregamento -->
+    <script>
+        window.addEventListener('load', function() {
+            console.log('Página carregada completamente');
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap não foi carregado corretamente');
+            } else {
+                console.log('Bootstrap carregado com sucesso');
+            }
+        });
+    </script>
+</body>
+</html> 

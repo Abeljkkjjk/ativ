@@ -1,0 +1,254 @@
+:root {
+    --netflix-red: #e50914;
+    --netflix-black: #141414;
+    --netflix-dark: #222222;
+    --netflix-gray: #808080;
+}
+
+body {
+    background-color: var(--netflix-black);
+    color: white;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Header Styles */
+.navbar {
+    background-color: rgba(0, 0, 0, 0.9);
+    padding: 1rem 2rem;
+}
+
+.navbar-brand img {
+    height: 25px;
+}
+
+.nav-link {
+    color: white !important;
+    margin: 0 10px;
+}
+
+.nav-link:hover {
+    color: var(--netflix-red) !important;
+}
+
+/* Carousel Styles */
+.carousel {
+    margin-bottom: 2rem;
+    position: relative;
+    width: 100%;
+    height: 80vh;
+    overflow: hidden;
+}
+
+.carousel-item {
+    height: 80vh;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.carousel-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%);
+}
+
+.carousel-caption {
+    background: none;
+    left: 0;
+    right: auto;
+    bottom: 0;
+    top: 0;
+    padding: 2rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 50%;
+}
+
+.carousel-caption h1 {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.carousel-caption p {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+    opacity: 0.7;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    opacity: 1;
+}
+
+.carousel-indicators {
+    margin-bottom: 1rem;
+}
+
+.carousel-indicators button {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin: 0 5px;
+}
+
+/* Search Bar */
+.search-bar {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+.search-bar:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Tabs */
+.nav-tabs {
+    border-bottom: 1px solid var(--netflix-gray);
+}
+
+.nav-tabs .nav-link {
+    color: var(--netflix-gray) !important;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.nav-tabs .nav-link.active {
+    color: white !important;
+    background: none;
+    border-bottom: 2px solid var(--netflix-red);
+}
+
+/* Movie and TV Show Cards */
+.movie-card,
+.tvshow-card {
+    background-color: var(--netflix-dark);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.movie-card:hover,
+.tvshow-card:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+.movie-card img,
+.tvshow-card img {
+    width: 100%;
+    height: auto;
+}
+
+.movie-info,
+.tvshow-info {
+    padding: 1rem;
+}
+
+.movie-title,
+.tvshow-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.movie-rating,
+.tvshow-rating {
+    color: var(--netflix-red);
+}
+
+.btn-group {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.movie-card:hover .btn-group,
+.tvshow-card:hover .btn-group {
+    opacity: 1;
+}
+
+/* Modal Styles */
+.modal-content {
+    background-color: var(--netflix-dark);
+    color: white;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--netflix-gray);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--netflix-gray);
+}
+
+/* Footer Styles */
+footer {
+    background-color: var(--netflix-dark);
+    padding: 2rem 0;
+    margin-top: 3rem;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+    color: var(--netflix-gray);
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .carousel-item {
+        height: 50vh;
+    }
+    
+    .carousel-caption {
+        padding: 1rem;
+        max-width: 100%;
+    }
+    
+    .carousel-caption h1 {
+        font-size: 2rem;
+    }
+    
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+} 
