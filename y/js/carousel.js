@@ -1,51 +1,41 @@
-import { getPopularMovies, TMDB_IMAGE_BASE_URL } from './app.js';
+import { getPopularContent, TMDB_IMAGE_BASE_URL } from './app.js';
 import { openMovieModal } from './modal.js';
 
-// Função para criar o carrossel de filmes populares
-export const createCarousel = async () => {
+// Função para criar o carrossel
+const createCarousel = async () => {
     try {
         console.log('Iniciando criação do carrossel...');
         
         // Verificar se o Bootstrap está disponível
         if (typeof bootstrap === 'undefined') {
-            console.error('Bootstrap não está disponível');
-            return;
+            throw new Error('Bootstrap não está disponível');
         }
-
-        // Buscar filmes populares
-        console.log('Buscando filmes populares...');
-        const movies = await getPopularMovies();
-        console.log('Filmes recebidos:', movies);
-
-        if (!movies || movies.length === 0) {
-            console.error('Nenhum filme encontrado para o carrossel');
-            return;
+        
+        // Buscar conteúdo popular
+        console.log('Buscando conteúdo popular...');
+        const content = await getPopularContent();
+        
+        if (!content || content.length === 0) {
+            throw new Error('Nenhum conteúdo encontrado');
         }
-
-        // Verificar elementos do DOM
-        const carouselIndicators = document.querySelector('#carousel-indicators');
-        const carouselInner = document.querySelector('#carousel-inner');
-        const carouselElement = document.querySelector('#carouselExampleCaptions');
-
-        if (!carouselIndicators || !carouselInner || !carouselElement) {
-            console.error('Elementos do carrossel não encontrados:', {
-                carouselIndicators: !!carouselIndicators,
-                carouselInner: !!carouselInner,
-                carouselElement: !!carouselElement
-            });
-            return;
+        
+        // Elementos do DOM
+        const carouselInner = document.getElementById('carousel-inner');
+        const carouselIndicators = document.getElementById('carousel-indicators');
+        
+        if (!carouselInner || !carouselIndicators) {
+            throw new Error('Elementos do carrossel não encontrados');
         }
-
-        console.log('Elementos do carrossel encontrados, criando slides...');
-
+        
         // Limpar carrossel existente
-        carouselIndicators.innerHTML = '';
         carouselInner.innerHTML = '';
-
-        // Criar slides com os 5 primeiros filmes
-        movies.slice(0, 5).forEach((movie, index) => {
-            console.log(`Criando slide ${index + 1} para o filme:`, movie.title);
-            
+        carouselIndicators.innerHTML = '';
+        
+        // Criar slides para os primeiros 5 itens
+        const slides = content.slice(0, 5);
+        console.log(`Criando ${slides.length} slides...`);
+        
+        slides.forEach((item, index) => {
             // Criar indicador
             const indicator = document.createElement('button');
             indicator.type = 'button';
@@ -54,65 +44,89 @@ export const createCarousel = async () => {
             if (index === 0) indicator.classList.add('active');
             indicator.setAttribute('aria-label', `Slide ${index + 1}`);
             carouselIndicators.appendChild(indicator);
-
+            
             // Criar slide
             const slide = document.createElement('div');
             slide.className = `carousel-item ${index === 0 ? 'active' : ''}`;
             
-            const backdropPath = movie.backdrop_path 
-                ? `${TMDB_IMAGE_BASE_URL}/original${movie.backdrop_path}`
+            // Verificar se o item tem imagem de fundo
+            const backdropPath = item.backdrop_path;
+            const imageUrl = backdropPath 
+                ? `https://image.tmdb.org/t/p/original${backdropPath}`
                 : 'https://via.placeholder.com/1920x1080?text=Imagem+não+disponível';
             
-            console.log(`URL da imagem do slide ${index + 1}:`, backdropPath);
+            console.log(`Slide ${index + 1}:`, {
+                title: item.title || item.name,
+                imageUrl: imageUrl
+            });
+            
+            // Criar elemento de imagem para pré-carregar
+            const img = new Image();
+            img.src = imageUrl;
+            img.onload = () => {
+                console.log(`Imagem do slide ${index + 1} carregada com sucesso`);
+            };
+            img.onerror = () => {
+                console.error(`Erro ao carregar imagem do slide ${index + 1}`);
+                img.src = 'https://via.placeholder.com/1920x1080?text=Imagem+não+disponível';
+            };
             
             slide.innerHTML = `
-                <img src="${backdropPath}" 
-                     class="d-block w-100" 
-                     alt="${movie.title}"
-                     onerror="this.src='https://via.placeholder.com/1920x1080?text=Imagem+não+disponível'">
+                <div class="carousel-item-background" style="background-image: url('${imageUrl}')"></div>
                 <div class="carousel-caption d-none d-md-block">
-                    <h5>${movie.title}</h5>
-                    <p>${movie.overview || 'Sinopse não disponível.'}</p>
-                    <button class="btn btn-danger" onclick="openMovieModal(${movie.id})">
+                    <h5>${item.title || item.name}</h5>
+                    <p>${item.overview || 'Descrição não disponível'}</p>
+                    <button class="btn btn-danger watch-button" data-id="${item.id}" data-type="${item.type}">
                         <i class="fas fa-play"></i> Assistir
                     </button>
                 </div>
             `;
+            
             carouselInner.appendChild(slide);
         });
-
-        console.log('Slides criados, inicializando carrossel...');
-
-        // Inicializar o carrossel do Bootstrap
-        const carousel = new bootstrap.Carousel(carouselElement, {
-            interval: 5000,
-            wrap: true
+        
+        console.log('Carrossel criado com sucesso');
+        
+        // Adicionar eventos aos botões de assistir
+        document.querySelectorAll('.watch-button').forEach(button => {
+            button.addEventListener('click', async () => {
+                const id = button.dataset.id;
+                const type = button.dataset.type;
+                if (id && type) {
+                    await openMovieModal(id, type);
+                }
+            });
         });
-
-        // Adicionar eventos de clique nos botões
-        const prevButton = document.querySelector('.carousel-control-prev');
-        const nextButton = document.querySelector('.carousel-control-next');
-
-        if (prevButton) {
-            prevButton.addEventListener('click', () => {
-                carousel.prev();
+        
+        // Inicializar carrossel do Bootstrap
+        const carouselElement = document.getElementById('carouselExampleCaptions');
+        if (carouselElement) {
+            const carousel = new bootstrap.Carousel(carouselElement, {
+                interval: 5000,
+                wrap: true
             });
+            console.log('Carrossel Bootstrap inicializado');
+            
+            // Adicionar event listeners para os botões
+            const prevButton = carouselElement.querySelector('.carousel-control-prev');
+            const nextButton = carouselElement.querySelector('.carousel-control-next');
+            
+            if (prevButton && nextButton) {
+                prevButton.addEventListener('click', () => {
+                    console.log('Botão anterior clicado');
+                    carousel.prev();
+                });
+                
+                nextButton.addEventListener('click', () => {
+                    console.log('Botão próximo clicado');
+                    carousel.next();
+                });
+            }
         }
-
-        if (nextButton) {
-            nextButton.addEventListener('click', () => {
-                carousel.next();
-            });
-        }
-
-        console.log('Carrossel criado e inicializado com sucesso');
     } catch (error) {
         console.error('Erro ao criar carrossel:', error);
     }
 };
 
-// Inicializar o carrossel quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado, iniciando criação do carrossel...');
-    createCarousel();
-}); 
+// Inicializar carrossel quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', createCarousel); 

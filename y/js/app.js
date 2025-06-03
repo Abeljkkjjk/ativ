@@ -1,124 +1,85 @@
 // Importar a função do modal primeiro
 import { openMovieModal } from './modal.js';
-import { addToMyList, removeFromMyList, markAsWatched, getUserMovies } from './userList.js';
-
-// Configuração do Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyDxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxX",
-    authDomain: "projeto-abel.firebaseapp.com",
-    projectId: "projeto-abel",
-    storageBucket: "projeto-abel.appspot.com",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdef1234567890abcdef"
-};
-
-// Inicialização do Firebase apenas se ainda não estiver inicializado
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+import { addToMyList } from './my-list.js';
+import { getAuth } from 'firebase/auth';
+import { removeFromMyList, markAsWatched, getUserMovies } from './userList.js';
+import firebase from './firebase-config.js';
 
 // Configuração da API do TMDB
 const TMDB_API_KEY = 'ccc8b62cbbecfab848e5084f061cbd17';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
+// Verificar se a chave da API está definida
+if (!TMDB_API_KEY) {
+    console.error('Chave da API do TMDB não está definida!');
+}
+
 // Funções auxiliares para a API do TMDB
 const fetchTMDB = async (endpoint) => {
     try {
-        console.log('Buscando dados do TMDB:', endpoint);
+        console.log('Iniciando requisição para o TMDB...');
+        console.log('Endpoint:', endpoint);
+        console.log('API Key:', TMDB_API_KEY);
+        
         const url = `${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}&language=pt-BR`;
-        console.log('URL da requisição:', url);
+        console.log('URL completa:', url);
         
         const response = await fetch(url);
         console.log('Status da resposta:', response.status);
+        console.log('Headers da resposta:', Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Resposta de erro:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         
         const data = await response.json();
         console.log('Dados recebidos:', data);
+        
+        if (!data) {
+            throw new Error('Nenhum dado recebido da API');
+        }
+        
+        if (data.status_code) {
+            throw new Error(`Erro da API TMDB: ${data.status_message}`);
+        }
+        
         return data;
     } catch (error) {
         console.error('Erro ao buscar dados do TMDB:', error);
+        console.error('Stack trace:', error.stack);
         return null;
     }
 };
 
-// Função para buscar filmes populares
-export const getPopularMovies = async () => {
+// Função para buscar conteúdo popular (filmes e séries)
+const getPopularContent = async () => {
     try {
-        console.log('Iniciando busca de filmes populares...');
-        const data = await fetchTMDB('/movie/popular');
+        console.log('Buscando conteúdo popular...');
         
-        if (!data) {
-            console.error('Nenhum dado recebido da API');
-            return [];
-        }
+        // Buscar filmes populares
+        const moviesData = await fetchTMDB('/movie/popular');
+        const movies = moviesData?.results || [];
+        console.log(`${movies.length} filmes encontrados`);
         
-        if (!data.results) {
-            console.error('Dados recebidos não contêm resultados:', data);
-            return [];
-        }
+        // Buscar séries populares
+        const seriesData = await fetchTMDB('/tv/popular');
+        const series = seriesData?.results || [];
+        console.log(`${series.length} séries encontradas`);
         
-        console.log(`${data.results.length} filmes encontrados`);
-        console.log('Primeiro filme:', data.results[0]);
+        // Combinar e ordenar por popularidade
+        const allContent = [
+            ...movies.map(movie => ({ ...movie, type: 'movie' })),
+            ...series.map(show => ({ ...show, type: 'tv' }))
+        ].sort((a, b) => b.popularity - a.popularity);
         
-        return data.results;
+        console.log(`Total de ${allContent.length} itens encontrados`);
+        return allContent;
     } catch (error) {
-        console.error('Erro ao buscar filmes populares:', error);
+        console.error('Erro ao buscar conteúdo popular:', error);
         return [];
-    }
-};
-
-// Função para buscar séries populares
-export const getPopularTVShows = async () => {
-    try {
-        console.log('Buscando séries populares...');
-        const data = await fetchTMDB('/tv/popular');
-        if (!data || !data.results) {
-            console.error('Dados inválidos recebidos da API');
-            return [];
-        }
-        console.log(`${data.results.length} séries encontradas`);
-        return data.results;
-    } catch (error) {
-        console.error('Erro ao buscar séries populares:', error);
-        return [];
-    }
-};
-
-// Função para buscar detalhes de um filme
-export const getMovieDetails = async (movieId) => {
-    try {
-        console.log('Buscando detalhes do filme:', movieId);
-        const data = await fetchTMDB(`/movie/${movieId}`);
-        if (!data) {
-            console.error('Dados inválidos recebidos da API');
-            return null;
-        }
-        console.log('Detalhes do filme recebidos:', data);
-        return data;
-    } catch (error) {
-        console.error('Erro ao buscar detalhes do filme:', error);
-        return null;
-    }
-};
-
-// Função para buscar detalhes de uma série
-export const getTVShowDetails = async (tvId) => {
-    try {
-        console.log('Buscando detalhes da série:', tvId);
-        const data = await fetchTMDB(`/tv/${tvId}`);
-        if (!data) {
-            console.error('Dados inválidos recebidos da API');
-            return null;
-        }
-        console.log('Detalhes da série recebidos:', data);
-        return data;
-    } catch (error) {
-        console.error('Erro ao buscar detalhes da série:', error);
-        return null;
     }
 };
 
@@ -166,65 +127,32 @@ const searchTVShows = async (query) => {
     }
 };
 
-// Função para criar card de filme
-const createMovieCard = (movie) => {
-    console.log('Criando card para filme:', movie.title);
+// Função para criar card de conteúdo
+const createContentCard = (item) => {
+    console.log('Criando card para:', item.title || item.name);
     const card = document.createElement('div');
-    card.className = 'col-md-3 col-sm-6';
+    card.className = 'col-md-3 col-sm-6 mb-4';
     
-    const posterPath = movie.poster_path 
-        ? `${TMDB_IMAGE_BASE_URL}/w500${movie.poster_path}`
+    const title = item.title || item.name;
+    const posterPath = item.poster_path 
+        ? `${TMDB_IMAGE_BASE_URL}/w500${item.poster_path}`
         : 'https://via.placeholder.com/500x750?text=Imagem+não+disponível';
     
     card.innerHTML = `
-        <div class="movie-card" data-movie-id="${movie.id}">
+        <div class="content-card" data-id="${item.id}" data-type="${item.type}">
             <img src="${posterPath}" 
-                 alt="${movie.title}"
+                 alt="${title}"
                  onerror="this.src='https://via.placeholder.com/500x750?text=Imagem+não+disponível'">
-            <div class="movie-info">
-                <h5 class="movie-title">${movie.title}</h5>
-                <div class="movie-rating">
-                    <i class="fas fa-star"></i> ${movie.vote_average.toFixed(1)}
+            <div class="content-info">
+                <h5 class="content-title">${title}</h5>
+                <div class="content-rating">
+                    <i class="fas fa-star"></i> ${item.vote_average.toFixed(1)}
                 </div>
                 <div class="btn-group mt-2">
-                    <button class="btn btn-sm btn-outline-light view-details" data-movie-id="${movie.id}">
+                    <button class="btn btn-sm btn-outline-light view-details" data-id="${item.id}" data-type="${item.type}">
                         <i class="fas fa-info-circle"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-light add-to-list" data-movie-id="${movie.id}">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    return card;
-};
-
-// Função para criar card de série
-const createTVShowCard = (show) => {
-    console.log('Criando card para série:', show.name);
-    const card = document.createElement('div');
-    card.className = 'col-md-3 col-sm-6';
-    
-    const posterPath = show.poster_path 
-        ? `${TMDB_IMAGE_BASE_URL}/w500${show.poster_path}`
-        : 'https://via.placeholder.com/500x750?text=Imagem+não+disponível';
-    
-    card.innerHTML = `
-        <div class="tvshow-card" data-tv-id="${show.id}">
-            <img src="${posterPath}" 
-                 alt="${show.name}"
-                 onerror="this.src='https://via.placeholder.com/500x750?text=Imagem+não+disponível'">
-            <div class="tvshow-info">
-                <h5 class="tvshow-title">${show.name}</h5>
-                <div class="tvshow-rating">
-                    <i class="fas fa-star"></i> ${show.vote_average.toFixed(1)}
-                </div>
-                <div class="btn-group mt-2">
-                    <button class="btn btn-sm btn-outline-light view-details" data-tv-id="${show.id}">
-                        <i class="fas fa-info-circle"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-light add-to-list" data-tv-id="${show.id}">
+                    <button class="btn btn-sm btn-outline-light add-to-list" data-id="${item.id}" data-type="${item.type}">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
@@ -238,108 +166,44 @@ const createTVShowCard = (show) => {
 const initializePage = async () => {
     console.log('Inicializando página...');
     try {
-        // Carregar filmes populares
-        const movies = await getPopularMovies();
-        const moviesContainer = document.getElementById('movies-container');
+        // Carregar conteúdo popular
+        const content = await getPopularContent();
+        const contentContainer = document.getElementById('content-container');
         
-        if (moviesContainer && movies.length > 0) {
-            console.log('Renderizando filmes...');
-            moviesContainer.innerHTML = movies.map(movie => `
-                <div class="col-md-3 mb-4">
-                    <div class="movie-card" onclick="openMovieModal(${movie.id})">
-                        <img src="${TMDB_IMAGE_BASE_URL}/w500${movie.poster_path}" 
-                             alt="${movie.title}"
-                             onerror="this.src='https://via.placeholder.com/500x750?text=Imagem+não+disponível'">
-                        <div class="movie-info">
-                            <h5 class="movie-title">${movie.title}</h5>
-                            <p class="movie-rating">
-                                <i class="fas fa-star"></i> ${movie.vote_average.toFixed(1)}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Carregar séries populares
-        const series = await getPopularTVShows();
-        const seriesContainer = document.getElementById('series-container');
-        
-        if (seriesContainer && series.length > 0) {
-            console.log('Renderizando séries...');
-            seriesContainer.innerHTML = series.map(show => `
-                <div class="col-md-3 mb-4">
-                    <div class="tvshow-card" onclick="openTVShowModal(${show.id})">
-                        <img src="${TMDB_IMAGE_BASE_URL}/w500${show.poster_path}" 
-                             alt="${show.name}"
-                             onerror="this.src='https://via.placeholder.com/500x750?text=Imagem+não+disponível'">
-                        <div class="tvshow-info">
-                            <h5 class="tvshow-title">${show.name}</h5>
-                            <p class="tvshow-rating">
-                                <i class="fas fa-star"></i> ${show.vote_average.toFixed(1)}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Carregar lista do usuário
-        const myListContainer = document.getElementById('mylist-container');
-        if (myListContainer) {
-            const userId = firebase.auth().currentUser?.uid;
-            if (userId) {
-                const userList = await getUserMovies(userId);
-                console.log('Itens na lista do usuário:', userList.length);
-                
-                myListContainer.innerHTML = '';
-                userList.forEach(item => {
-                    const card = item.type === 'movie' 
-                        ? createMovieCard(item)
-                        : createTVShowCard(item);
-                    myListContainer.appendChild(card);
-                });
-            } else {
-                myListContainer.innerHTML = '<div class="col-12 text-center"><p>Faça login para ver sua lista</p></div>';
-            }
+        if (contentContainer && content.length > 0) {
+            console.log('Renderizando conteúdo...');
+            contentContainer.innerHTML = '';
+            content.forEach(item => {
+                const card = createContentCard(item);
+                contentContainer.appendChild(card);
+            });
         }
 
         // Adicionar eventos aos botões
         document.querySelectorAll('.view-details').forEach(button => {
             button.addEventListener('click', async (e) => {
-                const movieId = e.target.closest('[data-movie-id]')?.dataset.movieId;
-                const tvId = e.target.closest('[data-tv-id]')?.dataset.tvId;
+                const id = e.target.closest('[data-id]')?.dataset.id;
+                const type = e.target.closest('[data-type]')?.dataset.type;
                 
-                if (movieId) {
-                    const movieDetails = await getMovieDetails(movieId);
-                    if (movieDetails) {
-                        openMovieModal(movieDetails);
-                    }
-                } else if (tvId) {
-                    const tvDetails = await getTVShowDetails(tvId);
-                    if (tvDetails) {
-                        openMovieModal(tvDetails);
-                    }
+                if (id && type) {
+                    await openMovieModal(id, type);
                 }
             });
         });
 
         document.querySelectorAll('.add-to-list').forEach(button => {
             button.addEventListener('click', async (e) => {
-                const userId = firebase.auth().currentUser?.uid;
-                if (!userId) {
+                const auth = getAuth();
+                if (!auth.currentUser) {
                     alert('Por favor, faça login para adicionar itens à sua lista');
                     return;
                 }
 
-                const movieId = e.target.closest('[data-movie-id]')?.dataset.movieId;
-                const tvId = e.target.closest('[data-tv-id]')?.dataset.tvId;
+                const id = e.target.closest('[data-id]')?.dataset.id;
+                const type = e.target.closest('[data-type]')?.dataset.type;
                 
-                if (movieId) {
-                    await addToMyList(movieId, userId);
-                    e.target.innerHTML = '<i class="fas fa-check"></i>';
-                } else if (tvId) {
-                    await addToMyList(tvId, userId, 'tv');
+                if (id && type) {
+                    await addToMyList(id, type);
                     e.target.innerHTML = '<i class="fas fa-check"></i>';
                 }
             });
@@ -358,14 +222,7 @@ document.addEventListener('DOMContentLoaded', initializePage);
 // Exportar funções e constantes necessárias
 export {
     TMDB_IMAGE_BASE_URL,
-    getPopularMovies,
-    getPopularTVShows,
-    getMovieDetails,
-    getTVShowDetails,
-    getMoviesByGenre,
-    getTVShowsByGenre,
-    searchMovies,
-    searchTVShows,
-    createMovieCard,
-    createTVShowCard
+    getPopularContent,
+    fetchTMDB,
+    createContentCard
 }; 
